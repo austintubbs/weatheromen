@@ -4,12 +4,12 @@ function SignInHeader(props) {
   return (
     <div className="SignInHeader">
       <nav>
-        <div class="nav-wrapper grey darken-3">
+        <div className="nav-wrapper grey darken-3">
           <div className="container">
-            <a href="/dashboard" class="brand-logo">
+            <a href="/dashboard" className="brand-logo">
               WeatherOmen
             </a>
-            <ul id="nav-mobile" class="right hide-on-med-and-down">
+            <ul className="right hide-on-med-and-down">
               <li>
                 <a href="/">Logout</a>
               </li>
