@@ -47,13 +47,16 @@ class CDIPbuoy(buoy):
         self.frequencyBins = np.append(self.waveFrequency - (self.waveBandwidth/2), self.waveFrequency[-1] + (self.waveBandwidth[-1]/2))
         self.directionBins = np.asarray(np.arange(2.5,367.5,5)) #range(0,360,10)
         
-        # Load 2D wave energy direction spectrum from CDIP website
-        self.waveEnergyDensityDirectionGrid = np.zeros((self.nt,64,72))
+        # Load historical 2D wave energy direction spectrum from CDIP website
+        self.waveEnergyDensityDirectionGrid = np.zeros((self.nt+1,64,72))
         self.url = []
-        for i in range(self.nt):
-            humanDate = getHumanTimestamp(self.timeUnix[i], '%Y%m%d%H%M') # Convert unix timestamp to string format to attach to URL
-            # save urls for debugging purposes
-            self.url.append('http://cdip.ucsd.edu/data_access/MEM_2dspectra.cdip?sp' + self.number + '01' + humanDate)
+        for i in range(self.nt+1):
+            if i == self.nt:
+                self.url.append('http://cdip.ucsd.edu/data_access/MEM_2dspectra.cdip?' + self.number)
+            else:
+                humanDate = getHumanTimestamp(self.timeUnix[i], '%Y%m%d%H%M') # Convert unix timestamp to string format to attach to URL
+                # save urls for debugging purposes
+                self.url.append('http://cdip.ucsd.edu/data_access/MEM_2dspectra.cdip?sp' + self.number + '01' + humanDate)
             data = urlopen(self.url[i])
             readdata = data.read().decode("utf-8") # Read text file of recent data
             datas = readdata.split("\n") # Split text file into individual rows
@@ -66,8 +69,10 @@ class CDIPbuoy(buoy):
             datas2.pop()
             Edarray = np.asarray(datas2, dtype=object)
             self.waveEnergyDensityDirectionGrid[i] = np.double(Edarray)
+        #  Load recent 2D wave energy direction spectrum from CDIP website
+        
         self.waveDirection  = np.arange(5,365,5)
-
+        
         t1 = time.time()
         total = t1-t0
         print(self.name,"data loaded in %.1f seconds"%total)
