@@ -40,9 +40,9 @@ class CDIPbuoy(buoy):
         self.waveEnergyDensityGrid = nc.variables['waveEnergyDensity'][tStart:-1,:]
         self.waveMeanDirectionGrid = nc.variables['waveMeanDirection'][tStart:-1,:]
         self.waveHs = nc.variables['waveHs'][tStart:-1]
-        self.waveTp = nc.variables['waveTp'][tStart:-1]
+        self.DPD = nc.variables['waveTp'][tStart:-1]
         self.waveTa = nc.variables['waveTa'][tStart:-1]
-        self.waveDp = nc.variables['waveDp'][tStart:-1]
+        self.MWD = nc.variables['waveDp'][tStart:-1]
         # Create frequency and direction bin coordinates for colormap plots
         self.frequencyBins = np.append(self.waveFrequency - (self.waveBandwidth/2), self.waveFrequency[-1] + (self.waveBandwidth[-1]/2))
         self.directionBins = np.asarray(np.arange(2.5,367.5,5)) #range(0,360,10)

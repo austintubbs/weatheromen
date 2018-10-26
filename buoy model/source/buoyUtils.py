@@ -36,3 +36,13 @@ def nextHour(t):
     # Rounds to nearest hour by adding a timedelta hour if minute >= 30
     return (t.replace(second=0, microsecond=0, minute=0, hour=t.hour)
                +datetime.timedelta(hours=1))
+
+def movingAvg(vector,N):
+    cumsum, moving_aves = [0], []
+    for i, x in enumerate(vector, 1):
+        cumsum.append(cumsum[i-1] + x)
+        if i>=N:
+            moving_ave = (cumsum[i] - cumsum[i-N])/N
+            #can do stuff with moving_ave here
+            moving_aves.append(moving_ave)
+    return moving_aves

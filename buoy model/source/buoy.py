@@ -3,13 +3,13 @@ import time
 
 class buoy:
    # """Represents a wave buoy, with a name."""
-    # A class variable, counting the number of buoys
-    def __init__(self,name,number,localTimeOffset):  #Name, Station Number, and Local Time Offset in Hours
+    # A class variable, counting the stn of buoys
+    def __init__(self,name,stn,localTimeOffset):  #Name, Station stn, and Local Time Offset in Hours
         """Initializes the data."""
         self.name = name
-        self.number = str(number)
+        self.stn = str(stn)
         self.localTimeOffset = localTimeOffset*3600
-#         print("(Initializing {} {})".format(self.name,self.number))
+#         print("(Initializing {} {})".format(self.name,self.stn))
         # When this buoy is created, the buoy
         # adds to the population
     

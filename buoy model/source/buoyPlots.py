@@ -1,5 +1,5 @@
-import matplotlib.pyplot as plt
 import numpy as np
+import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
@@ -7,70 +7,8 @@ import matplotlib.cbook as cbook
 from matplotlib.dates import (HOURLY, DateFormatter,
                               rrulewrapper, RRuleLocator, drange)
 import buoyUtils
-def oahuForecast(wBuoy,hBuoy):
-    # Day and hour locator for plots
-    days = mdates.DayLocator()   # every day
-    hours = mdates.HourLocator()  # every hour
-    dateFmt = mdates.DateFormatter('%H:%M\n%m/%d')
-    rule = rrulewrapper(HOURLY, interval=3)
-    loc = RRuleLocator(rule)
-    # Change location of direction gap so its not at 360 degrees
-    wBuoyWaveDpMod = buoyUtils.changeDirGap(wBuoy.waveDp)
-    hBuoyWaveDpMod = buoyUtils.changeDirGap(hBuoy.waveDp)
-    # Set direction plot limits
-    dirStart = 270
-    dirEnd = 45
-    dirDt = 15
-    directionLabels = np.concatenate((np.arange(dirStart,360+dirDt,dirDt),np.arange(dirDt,dirEnd+dirDt,dirDt)))
+import datetime
 
-    dateMin = buoyUtils.hourRounder(wBuoy.dateTimeLocal[0])
-    dateMax = buoyUtils.nextHour(wBuoy.dateTimeLocal[-1])
-    
-    fig, ax = plt.subplots(3,1,figsize=[15,15])
-    for i in range(3):
-        ax[i].grid(True, ls=":")
-        # format the ticks
-        ax[i].xaxis.set_major_locator(loc)
-        ax[i].xaxis.set_major_formatter(dateFmt)
-        ax[i].xaxis.set_minor_locator(hours)
-        ax[i].set_xlim(dateMin, dateMax)
-        #ax[i].set_xlabel("Date")
-    ax[0].set_ylabel("Wave Height [ft]")
-    ax[1].set_ylabel("Wave Period [sec]")
-    # Direction
-    ax[2].set_ylim([0,360])
-    ax[2].set_ylabel("Wave Direction [°]")
-    ax[2].set_ylim([dirStart,dirEnd+360])
-    ax[2].set_yticks(np.arange(dirStart,dirEnd+dirDt+360,dirDt))
-    ax[2].set_yticklabels(directionLabels)
-    # Spectrum
-#     ax[3].set_ylabel("Energy [$\mathregular{m^2/Hz}}$]")
-#     ax[3].set_xlabel("Period [s]")
-#     ax[3].grid(True, ls=":")
-#     ax[3].set_xlim([6,22])
-
-    ax[0].plot(wBuoy.dateTimeLocal,wBuoy.SwH[0:wBuoy.nt]*3.28084,'.-',label="Waimea Swell Heigh")
-    ax[0].plot(hBuoy.dateTimeLocal,hBuoy.SwH[0:hBuoy.nt]*3.28084,'.-',label="Hanalei Swell Heigh")
-#     ax[0].plot(wBuoy.dateTimeLocal,wBuoy.WVHT[startDateID:wBuoy.nt]*3.28084,'.-',label="Wave Height")
-#     ax[0].plot(wBuoy.dateTimeLocal,wBuoy.waveHs[startDateID:wBuoy.nt]*3.28084,'.-',label="Wave Height (check)")
-    ax[1].plot(wBuoy.dateTimeLocal,wBuoy.waveTp[0:wBuoy.nt],'.-',label="Waimea Wave Period")
-    ax[1].plot(hBuoy.dateTimeLocal,hBuoy.waveTp[0:hBuoy.nt],'.-',label="Hanalei Wave Period")
-#     ax[1].plot(wBuoy.dateTimeLocal,self.waveTa[startDateID:self.nt],'.-',label="Average Wave period")
-    ax[2].plot(wBuoy.dateTimeLocal,wBuoyWaveDpMod[0:wBuoy.nt],'.-',label="Waimea Wave Direction")
-    ax[2].plot(hBuoy.dateTimeLocal,hBuoyWaveDpMod[0:hBuoy.nt],'.-',label="Hanalei Wave Direction")
-#     ax[3].plot(self.wavePeriod,self.waveEnergyDensity[-1],'.-')
-
-    for i in range(3):
-        ax[i].legend(fontsize=12, loc=2, facecolor="white")
-    plt.title("Oahu Short Term Wave Forecast", fontsize=18, y=3.4)
-
-#     fig.text(0.3,0.89,"WVHT = "+str(round(wBuoy.WVHT[-1]*3.28084,2))+" ft    "+
-#              "SwH = "+str(round(wBuoy.SwH[-1]*3.28084,2))+" ft    "+
-#              "Period = "+str(round(wBuoy.waveTp[-1],1))+" seconds    "+
-#              "Direction = "+str(round(wBuoy.waveDp[-1],1))+" deg    "+
-#              str(wBuoy.dateTimeLocal[-1]))
-    fig.savefig('figures/Oahu Forecast.png')
-    
 def plotNineBands(self):
     # Day and hour locator for plots
     days = mdates.DayLocator()   # every day
@@ -132,7 +70,7 @@ def heightPerDir(self):
     rule = rrulewrapper(HOURLY, interval=3)
     loc = RRuleLocator(rule)
     # Change location of direction gap so its not at 360 degrees
-    waveDpMod = buoyUtils.changeDirGap(self.waveDp)
+    MWDMod = buoyUtils.changeDirGap(self.MWD)
     # Set direction plot limits
     dirStart = 270
     dirEnd = 45
@@ -176,24 +114,24 @@ def heightPerDir(self):
     ax[0].plot(self.dateTimeLocal,self.SwH[0:self.nt]*3.28084,'.-',label="Swell Height")
     ax[0].plot(self.dateTimeLocal,self.WVHT[0:self.nt]*3.28084,'.-',label="Wave Height")
     ax[0].plot(self.dateTimeLocal,self.waveHs[0:self.nt]*3.28084,'.-',label="Wave Height (check)")
-    ax[1].plot(self.dateTimeLocal,self.waveTp[0:self.nt],'.-',label="Peak Wave Period")
+    ax[1].plot(self.dateTimeLocal,self.DPD[0:self.nt],'.-',label="Peak Wave Period")
     ax[1].plot(self.dateTimeLocal,self.waveTa[0:self.nt],'.-',label="Average Wave period")
-    ax[2].plot(self.dateTimeLocal,waveDpMod[0:self.nt],'.-')#,label="Peak Wave Direction")
+    ax[2].plot(self.dateTimeLocal,MWDMod[0:self.nt],'.-')#,label="Peak Wave Direction")
     ax[3].plot(self.wavePeriod,self.waveEnergyDensity[-1],'.-')
     # Insert legends
     for i in range(2):
         ax[i].legend(fontsize=12, loc=2, facecolor="white")
         
-#     print("SWVHT = "+str(round(self.waveHs[-1]*3.28084,2))+" ft at "+str(round(self.waveTp[-1],1))+" seconds")
-#     print("WVHT = "+str(round(self.WVHT[-1]*3.28084,2))+" ft at "+str(round(self.waveTp[-1],1))+" seconds")
-#     print("SwH = "+str(round(self.SwH[-1]*3.28084,2))+" ft at "+str(round(self.waveTp[-1],1))+" seconds")
-#     print("Dir = "+str(round(self.waveDp[-1],2))+" degrees")
+#     print("SWVHT = "+str(round(self.waveHs[-1]*3.28084,2))+" ft at "+str(round(self.DPD[-1],1))+" seconds")
+#     print("WVHT = "+str(round(self.WVHT[-1]*3.28084,2))+" ft at "+str(round(self.DPD[-1],1))+" seconds")
+#     print("SwH = "+str(round(self.SwH[-1]*3.28084,2))+" ft at "+str(round(self.DPD[-1],1))+" seconds")
+#     print("Dir = "+str(round(self.MWD[-1],2))+" degrees")
 #     print(self.dateTimeLocal[-1])
 
     fig.text(0.3,0.89,"WVHT = "+str(round(self.WVHT[-1]*3.28084,2))+" ft    "+
              "SwH = "+str(round(self.SwH[-1]*3.28084,2))+" ft    "+
-             "Period = "+str(round(self.waveTp[-1],1))+" seconds    "+
-             "Direction = "+str(round(self.waveDp[-1],1))+" deg    "+
+             "Period = "+str(round(self.DPD[-1],1))+" seconds    "+
+             "Direction = "+str(round(self.MWD[-1],1))+" deg    "+
              str(self.dateTimeLocal[-1]))
     #          plt.title("Recent Wave data for "+self.name, fontsize=18, y=8)
     fig.savefig("figures/%s heightPerDir.png"%self.name)
@@ -238,6 +176,6 @@ def polarHeatMap(self):
     dateLabel = self.dateTimeLocal[-1].strftime('%m/%d/%Y %H:%M')  
     plt.title(dateLabel+" HST", fontsize=22, y=1.11)
     fig2.text(0.08,0.8,"WVHT = "+str(round(self.WVHT[-1]*3.28084,2))+" ft\nSwH = "+str(round(self.SwH[-1]*3.28084,2))+
-             " ft\nPeriod = "+str(round(self.waveTp[-1],1))+" s\nDirection = "+str(round(self.waveDp[-1],1))+"°")
+             " ft\nPeriod = "+str(round(self.DPD[-1],1))+" s\nDirection = "+str(round(self.MWD[-1],1))+"°")
     # Save the plot
     fig2.savefig("figures/%s polarHeatMap.png"%self.name)
