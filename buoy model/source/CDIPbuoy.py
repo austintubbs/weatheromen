@@ -9,18 +9,18 @@ from buoyUtils import getHumanTimestamp
 
 class CDIPbuoy(buoy):
        # Represents a CDIP wave buoy
-    def __init__(self,name,number,localTimeOffset):  #Name, Station Number, and Local Time Offset in Hours
+    def __init__(self,name,stn,localTimeOffset):  #Name, Station stn, and Local Time Offset in Hours
         """Initializes the data."""
         self.name = name
-        self.number = str(number)
+        self.stn = str(stn)
         self.localTimeOffset = localTimeOffset*3600
-        super().__init__(name,number,localTimeOffset) # not sure what this does but it was recommended
+        super().__init__(name,stn,localTimeOffset) # not sure what this does but it was recommended
     
     def loadNetCDF(self,daysToLoad):
         t0 = time.time() # time data started loading
         
         # Load wave data time series from netcdf
-        urlarc = 'http://thredds.cdip.ucsd.edu/thredds/dodsC/cdip/realtime/' + self.number + 'p1_rt.nc'
+        urlarc = 'http://thredds.cdip.ucsd.edu/thredds/dodsC/cdip/realtime/' + self.stn + 'p1_rt.nc'
         nc = Dataset(urlarc)
         self.timeUnix = nc.variables['waveTime'][0:2] # Get first two times
         self.dt = self.timeUnix[1]-self.timeUnix[0] # Calculate the difference between times
@@ -37,26 +37,27 @@ class CDIPbuoy(buoy):
         self.waveBandwidth = nc.variables['waveBandwidth'][:]
         self.waveFrequency = nc.variables['waveFrequency'][:]
         self.wavePeriod = 1/self.waveFrequency
-        self.waveEnergyDensityGrid = nc.variables['waveEnergyDensity'][tStart:-1,:]
-        self.waveMeanDirectionGrid = nc.variables['waveMeanDirection'][tStart:-1,:]
-        self.waveHs = nc.variables['waveHs'][tStart:-1]
+        self.WVHT = nc.variables['waveHs'][tStart:-1]
         self.DPD = nc.variables['waveTp'][tStart:-1]
-        self.waveTa = nc.variables['waveTa'][tStart:-1]
+        self.APD = nc.variables['waveTa'][tStart:-1]
         self.MWD = nc.variables['waveDp'][tStart:-1]
         # Create frequency and direction bin coordinates for colormap plots
         self.frequencyBins = np.append(self.waveFrequency - (self.waveBandwidth/2), self.waveFrequency[-1] + (self.waveBandwidth[-1]/2))
         self.directionBins = np.asarray(np.arange(2.5,367.5,5)) #range(0,360,10)
+        self.waveEnergyDensityGrid = nc.variables['waveEnergyDensity'][tStart:-1,:]
+        self.waveMeanDirectionGrid = nc.variables['waveMeanDirection'][tStart:-1,:]
         
+        t0 = time.time() # time data started loading
         # Load historical 2D wave energy direction spectrum from CDIP website
-        self.waveEnergyDensityDirectionGrid = np.zeros((self.nt+1,64,72))
+        self.waveEnergyDensityDirectionGrid = np.zeros((1,64,72)) #np.zeros((self.nt+1,64,72))
         self.url = []
-        for i in range(self.nt+1):
-            if i == self.nt:
-                self.url.append('http://cdip.ucsd.edu/data_access/MEM_2dspectra.cdip?' + self.number)
+        for i in range(1): #self.nt+1):
+            if i == 0: #self.nt:
+                self.url.append('http://cdip.ucsd.edu/data_access/MEM_2dspectra.cdip?' + self.stn)
             else:
                 humanDate = getHumanTimestamp(self.timeUnix[i], '%Y%m%d%H%M') # Convert unix timestamp to string format to attach to URL
                 # save urls for debugging purposes
-                self.url.append('http://cdip.ucsd.edu/data_access/MEM_2dspectra.cdip?sp' + self.number + '01' + humanDate)
+                self.url.append('http://cdip.ucsd.edu/data_access/MEM_2dspectra.cdip?sp' + self.stn + '01' + humanDate)
             data = urlopen(self.url[i])
             readdata = data.read().decode("utf-8") # Read text file of recent data
             datas = readdata.split("\n") # Split text file into individual rows
@@ -70,9 +71,14 @@ class CDIPbuoy(buoy):
             Edarray = np.asarray(datas2, dtype=object)
             self.waveEnergyDensityDirectionGrid[i] = np.double(Edarray)
         #  Load recent 2D wave energy direction spectrum from CDIP website
-        
+        t1 = time.time()
+        total = t1-t0
+        print(self.name,"%.1f seconds"%total)
         self.waveDirection  = np.arange(5,365,5)
-        
+        self.ntSpec = self.nt
+        self.dateTimeSpecLocal = self.dateTimeLocal
+        self.dateTimeSpecUTC = self.dateTimeUTC
+        self.timeSpecUnix = self.timeUnix
         t1 = time.time()
         total = t1-t0
         print(self.name,"data loaded in %.1f seconds"%total)

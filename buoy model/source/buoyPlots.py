@@ -9,6 +9,86 @@ from matplotlib.dates import (HOURLY, DateFormatter,
 import buoyUtils
 import datetime
 
+def compare(self1,self2):
+    # Day and hour locator for plots
+    days = mdates.DayLocator()   # every day
+    hours = mdates.HourLocator()  # every hour
+    dateFmt = mdates.DateFormatter('%H:%M\n%m/%d')
+    rule = rrulewrapper(HOURLY, interval=3)
+    loc = RRuleLocator(rule)
+    # Change location of direction gap so its not at 360 degrees
+    MWDMod1 = buoyUtils.changeDirGap(self1.MWD)
+    MWDMod2 = buoyUtils.changeDirGap(self2.MWD)
+    # Set direction plot limits
+    dirStart = 270
+    dirEnd = 45
+    dirDt = 15
+    directionLabels = np.concatenate((np.arange(dirStart,360+dirDt,dirDt),np.arange(dirDt,dirEnd+dirDt,dirDt)))
+
+    dateMin = buoyUtils.hourRounder(self1.dateTimeLocal[0])
+    dateMax = buoyUtils.nextHour(self1.dateTimeLocal[-1])
+    
+    # Create the figure
+    fig, ax = plt.subplots(4,1,figsize=[15,20])
+    # Format the x-axis
+    for i in range(3):
+        ax[i].grid(True, ls=":")
+        # format the ticks
+        ax[i].set_xlim(dateMin, dateMax)
+        ax[i].xaxis.set_major_locator(loc)
+        ax[i].xaxis.set_major_formatter(dateFmt)
+        ax[i].xaxis.set_minor_locator(hours)
+        
+        #ax[i].set_xlabel("Date")
+    
+    # Set specific axis values
+    ax[0].set_ylabel("Wave Height (ft)")
+    ax[1].set_ylabel("Wave Period (sec)")
+    # Direction
+#     ax[2].set_xlim([self1.dateTimeLocal[0],self1.dateTimeLocal[-1]])
+    ax[2].set_ylim([dirStart,dirEnd+360])
+    ax[2].set_yticks(np.arange(dirStart,dirEnd+dirDt+360,dirDt))
+    ax[2].set_yticklabels(directionLabels)
+    ax[2].set_ylabel("Wave Direction (°)")
+    # Spectrum
+    ax[3].set_ylabel("Energy ($\mathregular{m^2/Hz}}$)")
+    ax[3].set_xlabel("Period (s)")
+    ax[3].grid(True, ls=":")
+    ax[3].set_xlim([6,22])
+    # Shadow boxes
+    #     ax[2].axhspan(272, 292, alpha=0.5, color='red')
+    #     ax[i].axvspan(self.dateTimeLocal[-1], self.dateTimeLocal[-5], alpha=0.5, color='grey')
+
+    # Plot lines
+    ax[0].plot(self1.dateTimeLocal,self1.SwH[0:self1.nt]*3.28084,'.-',label=self1.name+" Swell Height")
+#     ax[0].plot(self1.dateTimeSpecLocal,self1.SwH2[0:self1.ntSpec]*3.28084,'.-',label=self1.name+" Swell Height (derived from spec)")
+    ax[0].plot(self1.dateTimeLocal,self1.WVHT[0:self1.nt]*3.28084,'.-',label=self1.name+" Wave Height")
+#     ax[0].plot(self1.dateTimeSpecLocal,self1.WVHT2[0:self1.ntSpec]*3.28084,'.-',label=self1.name+" Wave Height (derived from spec)")
+    ax[1].plot(self1.dateTimeLocal,self1.DPD[0:self1.nt],'.-',label=self1.name+" Peak Wave Period")
+    ax[1].plot(self1.dateTimeLocal,self1.APD[0:self1.nt],'.-',label=self1.name+" Average Wave period")
+    ax[2].plot(self1.dateTimeLocal,MWDMod1[0:self1.nt],'.-')#,label=self1.name+" Peak Wave Direction")
+    ax[3].plot(self1.wavePeriod,self1.waveEnergyDensityGrid[-1],'.-')
+    
+    ax[0].plot(self2.dateTimeLocal,self2.SwH[0:self2.nt]*3.28084,'.-',label=self2.name+" Swell Height")
+    ax[0].plot(self2.dateTimeSpecLocal,self2.SwH2[0:self2.ntSpec]*3.28084,'.-',label=self2.name+" Swell Height (derived from spec)")
+    ax[0].plot(self2.dateTimeLocal,self2.WVHT[0:self2.nt]*3.28084,'.-',label=self2.name+" Wave Height")
+    ax[0].plot(self2.dateTimeSpecLocal,self2.WVHT2[0:self2.ntSpec]*3.28084,'.-',label=self2.name+" Wave Height (derived from spec)")
+    ax[1].plot(self2.dateTimeLocal,self2.DPD[0:self2.nt],'.-',label=self2.name+" Peak Wave Period")
+    ax[1].plot(self2.dateTimeLocal,self2.APD[0:self2.nt],'.-',label=self2.name+" Average Wave period")
+    ax[2].plot(self2.dateTimeLocal,MWDMod2[0:self2.nt],'.-')#,label=self2.name+" Peak Wave Direction")
+    ax[3].plot(self2.wavePeriod,self2.waveEnergyDensityGrid[-1],'.-')
+    # Insert legends
+    for i in range(2):
+        ax[i].legend(fontsize=12, loc=2, facecolor="white")
+        
+#     print("SWVHT = "+str(round(self.waveHs[-1]*3.28084,2))+" ft at "+str(round(self.DPD[-1],1))+" seconds")
+#     print("WVHT = "+str(round(self.WVHT[-1]*3.28084,2))+" ft at "+str(round(self.DPD[-1],1))+" seconds")
+#     print("SwH = "+str(round(self.SwH[-1]*3.28084,2))+" ft at "+str(round(self.DPD[-1],1))+" seconds")
+#     print("Dir = "+str(round(self.MWD[-1],2))+" degrees")
+#     print(self.dateTimeLocal[-1])
+
+    fig.savefig("figures/%s and %s heightPerDir.png"%(self1.name,self2.name))
+    
 def plotNineBands(self):
     # Day and hour locator for plots
     days = mdates.DayLocator()   # every day
@@ -112,12 +192,13 @@ def heightPerDir(self):
 
     # Plot lines
     ax[0].plot(self.dateTimeLocal,self.SwH[0:self.nt]*3.28084,'.-',label="Swell Height")
+    ax[0].plot(self.dateTimeLocal,self.SwH2[0:self.nt]*3.28084,'.-',label="Swell Height (derived)")
     ax[0].plot(self.dateTimeLocal,self.WVHT[0:self.nt]*3.28084,'.-',label="Wave Height")
-    ax[0].plot(self.dateTimeLocal,self.waveHs[0:self.nt]*3.28084,'.-',label="Wave Height (check)")
+    ax[0].plot(self.dateTimeLocal,self.WVHT2[0:self.nt]*3.28084,'.-',label="Wave Height (derived)")
     ax[1].plot(self.dateTimeLocal,self.DPD[0:self.nt],'.-',label="Peak Wave Period")
-    ax[1].plot(self.dateTimeLocal,self.waveTa[0:self.nt],'.-',label="Average Wave period")
+    ax[1].plot(self.dateTimeLocal,self.APD[0:self.nt],'.-',label="Average Wave period")
     ax[2].plot(self.dateTimeLocal,MWDMod[0:self.nt],'.-')#,label="Peak Wave Direction")
-    ax[3].plot(self.wavePeriod,self.waveEnergyDensity[-1],'.-')
+    ax[3].plot(self.wavePeriod,self.waveEnergyDensityGrid[-1],'.-')
     # Insert legends
     for i in range(2):
         ax[i].legend(fontsize=12, loc=2, facecolor="white")

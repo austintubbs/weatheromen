@@ -1,4 +1,5 @@
 from buoy import buoy
+from scipy.signal import savgol_filter
 import datetime
 import numpy as np
 import buoyUtils
@@ -55,8 +56,8 @@ def plot(wBuoy,hBuoy,hBoffset,buoy1,b1offset):
         ax[i].xaxis.set_major_locator(loc)
         ax[i].xaxis.set_major_formatter(dateFmt)
         ax[i].xaxis.set_minor_locator(hours)
-        ax[i].set_xlim(dateMin, dateMax)
-#         ax[i].set_xlim(datetime.date(2018,10,15),datetime.date(2018,10,17))
+#         ax[i].set_xlim(dateMin, dateMax)
+        ax[i].set_xlim(datetime.datetime(2018,10,15,12,0,0),datetime.datetime(2018,10,18,0,0,0))
         #ax[i].set_xlabel("Date")
     ax[0].set_ylabel("Wave Height [ft]")
     ax[1].set_ylabel("Wave Period [sec]")
@@ -71,12 +72,20 @@ def plot(wBuoy,hBuoy,hBoffset,buoy1,b1offset):
 #     ax[3].set_xlabel("Period [s]")
 #     ax[3].grid(True, ls=":")
 #     ax[3].set_xlim([6,22])
-
+    wBuoy.SwHfilt = savgol_filter(wBuoy.SwH, 21, 3)
+    hBoffset.SwHfilt = savgol_filter(hBoffset.SwH, 21, 3)
+    b1offset.SwHfilt = savgol_filter(b1offset.SwH, 21, 3)
+    hBoffset.DPDfilt = savgol_filter(hBoffset.DPD, 21, 3)
+    b1offset.DPDfilt = savgol_filter(b1offset.DPD, 21, 3)
+    hBoffsetWaveDpModfilt = savgol_filter(hBoffsetWaveDpMod, 21, 3)
+    b1offsetWaveDpModfilt = savgol_filter(b1offsetWaveDpMod, 21, 3)
+    
     ax[0].plot(wBuoy.dateTimeLocal,wBuoy.SwH[0:wBuoy.nt]*3.28084,'.-',label="Waimea Swell Height")
+#     ax[0].plot(wBuoy.dateTimeLocal,wBuoy.SwHfilt[0:wBuoy.nt]*3.28084,'.-',label="Waimea Swell Height")
 #     ax[0].plot(hBuoy.dateTimeLocal,hBuoy.SwH[0:hBuoy.nt]*3.28084,'.-',label="Hanalei Swell Height")
 #     ax[0].plot(buoy1.dateTimeLocal,buoy1.SwH*3.28084,'.-',label="Buoy 1 Swell Height")
-    ax[0].plot(b1offset.dateTimeLocal,b1offset.SwH*3.28084,'.-',label="Buoy 1 Offset Swell Height")
-    ax[0].plot(hBoffset.dateTimeLocal,hBoffset.SwH*3.28084,'.-',label="Hanalei Offset Swell Height")
+    ax[0].plot(b1offset.dateTimeLocal,b1offset.SwHfilt*3.28084,'.-',label="Buoy 1 Offset Swell Height")
+    ax[0].plot(hBoffset.dateTimeLocal,hBoffset.SwHfilt*3.28084,'.-',label="Hanalei Offset Swell Height")
 #     ax[0].plot(wBuoy.dateTimeLocal,wBuoy.WVHT[startDateID:wBuoy.nt]*3.28084,'.-',label="Wave Height")
 #     ax[0].plot(wBuoy.dateTimeLocal,wBuoy.waveHs[startDateID:wBuoy.nt]*3.28084,'.-',label="Wave Height (check)")
     ax[1].plot(wBuoy.dateTimeLocal,wBuoy.DPD[0:wBuoy.nt],'.-',label="Waimea Swell Period")
@@ -86,8 +95,8 @@ def plot(wBuoy,hBuoy,hBoffset,buoy1,b1offset):
 #     ax[1].plot(wBuoy.dateTimeLocal,self.waveTa[startDateID:self.nt],'.-',label="Average Wave period")
     ax[2].plot(wBuoy.dateTimeLocal,wBuoyWaveDpMod[0:wBuoy.nt],'.-',label="Waimea Swell Direction")
 #     ax[2].plot(hBuoy.dateTimeLocal,hBuoyWaveDpMod[0:hBuoy.nt],'.-',label="Hanalei Swell Direction") 
-    ax[2].plot(b1offset.dateTimeLocal,b1offsetWaveDpMod,'.-',label="Buoy 1 Offset Swell Direction")
-    ax[2].plot(hBoffset.dateTimeLocal,hBoffsetWaveDpMod,'.-',label="Hanalei Offset Swell Direction")
+    ax[2].plot(b1offset.dateTimeLocal,b1offsetWaveDpModfilt,'.-',label="Buoy 1 Offset Swell Direction")
+    ax[2].plot(hBoffset.dateTimeLocal,hBoffsetWaveDpModfilt,'.-',label="Hanalei Offset Swell Direction")
 #     ax[3].plot(self.wavePeriod,self.waveEnergyDensity[-1],'.-')
 
     for i in range(3):
